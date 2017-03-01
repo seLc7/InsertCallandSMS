@@ -1,10 +1,14 @@
 package com.example.cheng.insertcallandsms;
 
 import android.content.ContentValues;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.CallLog;
+import android.provider.Telephony;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -16,7 +20,8 @@ public class MainActivity extends AppCompatActivity {
     int callNum, callDuration, callType;
     List<String[]> callLogList = new ArrayList<>();
 
-    public static Uri mSmsUri = Uri.parse("content://sms/inbox");
+    public static Uri mSmsUri = Uri.parse("content://sms");
+    private String read;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,6 +32,13 @@ public class MainActivity extends AppCompatActivity {
         final EditText callDurationEdit = (EditText) findViewById(R.id.call_duration_edit);
         final EditText callTypeEdit = (EditText) findViewById(R.id.call_type_edit);
 
+
+        String defaultSmsApp = Telephony.Sms.getDefaultSmsPackage(MainActivity.this);
+        Log.i("context", defaultSmsApp);
+        Log.i("packagenem",MainActivity.this.getPackageName());
+        Intent intent = new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
+        intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, getPackageName());
+        startActivity(intent);
         /*addCallLog.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -40,13 +52,21 @@ public class MainActivity extends AppCompatActivity {
                 insertCallLog(callNum, callDuration, callType, true, 0);
             }
         });*/
-        insertCallLog(12312131, 20, 1, true, 0);
+//        insertCallLog(12312131, 20, 1, true, 0);
         List<String[]> callList = getCallLogList();
         for (int i = 0; i < callList.size(); i++) {
             insertCallLog(Long.parseLong(callList.get(i)[0]),
                     Integer.parseInt(callList.get(i)[1]), Integer.parseInt(callList.get(i)[2]), true, 0);
-
         }
+
+//        insertSMS();
+
+        addCallLog.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                insertSMS();
+            }
+        });
     }
 
     private void insertCallLog(long num, int duration, int type, boolean get, long i) {
@@ -61,21 +81,20 @@ public class MainActivity extends AppCompatActivity {
         getContentResolver().insert(CallLog.Calls.CONTENT_URI, values);
     }
 
-    private void insertSMS()
-    {
+    private void insertSMS() {
         // TODO Auto-generated method stub
-        for(int i=0;i<20;i++)
-        {
-            ContentValues values = new ContentValues();
-            values.put("address", "13898878776");
-            values.put("body", "您好!");
-            values.put("date", 20111101);
-            values.put("read", 0);
-            values.put("type", 1);
-            values.put("service_center", "+8613010776500");
+        ContentValues values = new ContentValues();
+        values.put(Telephony.Sms.THREAD_ID, "3");
+        values.put(Telephony.Sms.ADDRESS, "13898878776");
+        values.put(Telephony.Sms.BODY, "您好!");
+        values.put(Telephony.Sms.DATE, System.currentTimeMillis());
+        values.put(read, 0);
+        values.put(Telephony.Sms.TYPE, 1);
+        values.put(Telephony.Sms.SERVICE_CENTER, "+8613010776500");
 
-            getContentResolver().insert(mSmsUri, values);
-        }
+        getContentResolver().insert(Telephony.Sms.CONTENT_URI, values);
+
+        Log.i("tag", "insert SMS");
     }
 
     public List<String[]> getCallLogList() {
